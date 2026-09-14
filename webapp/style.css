@@ -150,6 +150,70 @@ button.secondary:disabled {
   border-color: var(--border);
 }
 
+.step {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.demand-group {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.demand-group:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.demand-group h3 {
+  font-size: 0.95rem;
+  margin: 0 0 10px;
+}
+
+.demand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.demand-input {
+  width: 110px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.times {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.demand-row button {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.add-demand {
+  margin-top: 10px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
 .band-list {
   margin: 16px 0;
 }
@@ -214,28 +278,6 @@ button.secondary:disabled {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0;
-}
-
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.chart-controls label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: var(--text);
 }
 
 .chart-wrap {
