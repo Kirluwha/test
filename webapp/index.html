@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supply &amp; Demand Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="vendor/papaparse.min.js"></script>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/chart.umd.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Supply &amp; Demand Analyzer</h1>
+    <p class="subtitle">
+      Compare how asking rents are spread across price bands (supply) against the price points you have
+      demand for, broken down by bedroom type.
+    </p>
+
+    <section class="card">
+      <h2><span class="step">Step 1</span> Supply — upload data</h2>
+      <p class="hint">
+        A CSV or Excel file with <strong>Asking Rent</strong> and <strong>Bedrooms</strong> columns, one row
+        per listing.
+      </p>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+      <div id="fileStatus" class="status"></div>
+      <div id="previewBlock" hidden>
+        <div class="table-wrap">
+          <table id="previewTable"></table>
+        </div>
+        <p class="hint" id="previewHint"></p>
+      </div>
+    </section>
+
+    <section class="card" id="demandSection" hidden>
+      <h2><span class="step">Step 2</span> Demand — enter data</h2>
+      <p class="hint">
+        For each bedroom type, enter the price points you have demand for and how many units at each. Add a
+        row per price point — demand percentages are worked out within each bedroom type, the same way as
+        supply. Leave a bedroom type blank to chart supply only.
+      </p>
+      <div id="demandGroups"></div>
+    </section>
+
+    <section class="card" id="bandsSection" hidden>
+      <h2>Price bands</h2>
+      <p class="hint">
+        Used for both supply and demand. A band covers its lower value up to — but not including — its upper
+        value, so £1,500 falls in £1,500–£1,800. Anything outside every band is counted as "Other".
+      </p>
+      <div id="bandList" class="band-list"></div>
+      <div class="band-actions">
+        <button id="addBandBtn" class="secondary">Add band</button>
+        <button id="resetBandsBtn" class="secondary">Reset to defaults</button>
+      </div>
+      <div id="bandError" class="status error"></div>
+    </section>
+
+    <section class="card" id="analyzeSection" hidden>
+      <h2><span class="step">Step 3</span> Analyse</h2>
+      <button id="analyzeBtn">Analyse</button>
+      <div id="analyzeStatus" class="status"></div>
+    </section>
+
+    <section id="resultsSection" hidden>
+      <div class="card">
+        <h2><span class="step">Step 4</span> Results</h2>
+        <div id="summary" class="hint"></div>
+      </div>
+      <div id="chartCards"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
