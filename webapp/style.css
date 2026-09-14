@@ -40,7 +40,13 @@ body {
 
 h1 {
   font-size: 1.6rem;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 24px;
 }
 
 .card {
@@ -125,6 +131,89 @@ table th {
   background: var(--bg);
   position: sticky;
   top: 0;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+  background: var(--bg);
+  color: var(--accent-hover);
+}
+
+button.secondary:disabled {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.band-list {
+  margin: 16px 0;
+}
+
+.band-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+
+.band-name {
+  min-width: 62px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.band-to,
+.currency {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.band-input {
+  width: 92px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.band-row button {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.band-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chart-card h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.empty-msg {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .chart-controls {

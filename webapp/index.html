@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Analyzer</title>
+  <title>Rent Distribution Analyzer</title>
   <link rel="stylesheet" href="style.css" />
   <script src="vendor/papaparse.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
@@ -11,7 +11,11 @@
 </head>
 <body>
   <div class="container">
-    <h1>Data Analyzer</h1>
+    <h1>Rent Distribution Analyzer</h1>
+    <p class="subtitle">
+      Upload a listings file with <strong>Asking Rent</strong> and <strong>Bedrooms</strong> columns to see how
+      asking rents are distributed within each bedroom type.
+    </p>
 
     <section class="card">
       <h2>1. Upload data</h2>
@@ -28,27 +32,41 @@
       <p class="hint" id="previewHint"></p>
     </section>
 
+    <section class="card" id="bandsSection" hidden>
+      <h2>3. Price bands</h2>
+      <p class="hint">
+        A band covers its lower value up to — but not including — its upper value, so £1,500 falls in
+        £1,500–£1,800. Rents outside every band are counted as "Other".
+      </p>
+      <div id="bandList" class="band-list"></div>
+      <div class="band-actions">
+        <button id="addBandBtn" class="secondary">Add band</button>
+        <button id="resetBandsBtn" class="secondary">Reset to defaults</button>
+      </div>
+      <div id="bandError" class="status error"></div>
+    </section>
+
     <section class="card" id="analyzeSection" hidden>
-      <h2>3. Analyze</h2>
-      <button id="analyzeBtn">Analyze</button>
+      <h2>4. Analyse</h2>
+      <button id="analyzeBtn">Analyse</button>
       <div id="analyzeStatus" class="status"></div>
     </section>
 
-    <section class="card" id="resultsSection" hidden>
-      <h2>4. Results</h2>
-      <div class="chart-controls">
-        <label>
-          Chart type:
-          <select id="chartType">
-            <option value="bar">Bar chart</option>
-            <option value="pie">Pie chart</option>
-          </select>
-        </label>
-        <button id="downloadBtn">Download PNG</button>
+    <section id="resultsSection" hidden>
+      <div class="card">
+        <h2>5. Results</h2>
+        <div class="chart-controls">
+          <label>
+            Chart type:
+            <select id="chartType">
+              <option value="bar">Bar chart</option>
+              <option value="pie">Pie chart</option>
+            </select>
+          </label>
+        </div>
+        <div id="summary" class="hint"></div>
       </div>
-      <div class="chart-wrap">
-        <canvas id="resultChart"></canvas>
-      </div>
+      <div id="chartCards"></div>
     </section>
   </div>
 
