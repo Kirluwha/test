@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="vendor/papaparse.min.js"></script>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/chart.umd.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Data Analyzer</h1>
+
+    <section class="card">
+      <h2>1. Upload data</h2>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+      <p class="hint">Accepts CSV or Excel (.xlsx / .xls) files.</p>
+      <div id="fileStatus" class="status"></div>
+    </section>
+
+    <section class="card" id="previewSection" hidden>
+      <h2>2. Preview</h2>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+      <p class="hint" id="previewHint"></p>
+    </section>
+
+    <section class="card" id="analyzeSection" hidden>
+      <h2>3. Analyze</h2>
+      <button id="analyzeBtn">Analyze</button>
+      <div id="analyzeStatus" class="status"></div>
+    </section>
+
+    <section class="card" id="resultsSection" hidden>
+      <h2>4. Results</h2>
+      <div class="chart-controls">
+        <label>
+          Chart type:
+          <select id="chartType">
+            <option value="bar">Bar chart</option>
+            <option value="pie">Pie chart</option>
+          </select>
+        </label>
+        <button id="downloadBtn">Download PNG</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="resultChart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
