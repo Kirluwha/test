@@ -13,12 +13,12 @@
   <div class="container">
     <h1>Supply &amp; Demand Analyzer</h1>
     <p class="subtitle">
-      Compare how asking rents are spread across price bands (supply) against the price points you have
-      demand for, broken down by bedroom type.
+      Compare how asking rents in the market are spread across price bands against the price points of our
+      demand and our supply, broken down by bedroom type.
     </p>
 
     <section class="card">
-      <h2><span class="step">Step 1</span> Supply — upload data</h2>
+      <h2><span class="step">Step 1</span> Market Supply — upload data</h2>
       <p class="hint">
         A CSV or Excel file with <strong>Asking Rent</strong> and <strong>Bedrooms</strong> columns, one row
         per listing.
@@ -33,20 +33,29 @@
       </div>
     </section>
 
-    <section class="card" id="demandSection" hidden>
-      <h2><span class="step">Step 2</span> Demand — enter data</h2>
+    <section class="card" id="ourDemandSection" hidden>
+      <h2><span class="step">Step 2</span> Our Demand — enter data</h2>
       <p class="hint">
-        For each bedroom type, enter the price points you have demand for and how many units at each. Add a
-        row per price point — demand percentages are worked out within each bedroom type, the same way as
-        supply. Leave a bedroom type blank to chart supply only.
+        For each bedroom type, enter the price points we have demand for and how many units at each. Add a
+        row per price point — percentages are worked out within each bedroom type, the same way as market
+        supply. Leave a bedroom type blank to leave it out of the charts.
       </p>
-      <div id="demandGroups"></div>
+      <div id="ourDemandGroups" class="entry-groups" data-series="ourDemand"></div>
+    </section>
+
+    <section class="card" id="ourSupplySection" hidden>
+      <h2><span class="step">Step 3</span> Our Supply — enter data</h2>
+      <p class="hint">
+        For each bedroom type, enter the price points we are supplying and how many units at each. Add a row
+        per price point. Leave a bedroom type blank to leave it out of the charts.
+      </p>
+      <div id="ourSupplyGroups" class="entry-groups" data-series="ourSupply"></div>
     </section>
 
     <section class="card" id="bandsSection" hidden>
-      <h2>Price bands</h2>
+      <h2><span class="step">Step 4</span> Price bands</h2>
       <p class="hint">
-        Used for both supply and demand. A band covers its lower value up to — but not including — its upper
+        Used for market supply, our demand and our supply. A band covers its lower value up to — but not including — its upper
         value, so £1,500 falls in £1,500–£1,800. Anything outside every band is counted as "Other".
       </p>
       <div id="bandList" class="band-list"></div>
@@ -58,14 +67,14 @@
     </section>
 
     <section class="card" id="analyzeSection" hidden>
-      <h2><span class="step">Step 3</span> Analyse</h2>
+      <h2><span class="step">Step 5</span> Analyse</h2>
       <button id="analyzeBtn">Analyse</button>
       <div id="analyzeStatus" class="status"></div>
     </section>
 
     <section id="resultsSection" hidden>
       <div class="card">
-        <h2><span class="step">Step 4</span> Results</h2>
+        <h2><span class="step">Step 6</span> Results</h2>
         <div id="summary" class="hint"></div>
       </div>
       <div id="chartCards"></div>

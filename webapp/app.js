@@ -9,15 +9,23 @@ const BEDROOM_TYPES = [1, 2, 3];
 const RENT_COLUMN_NAMES = ["askingrent", "rent", "askingprice"];
 const BEDROOM_COLUMN_NAMES = ["bedrooms", "bedroom", "beds"];
 const PREVIEW_ROW_LIMIT = 10;
-const DEMAND_ROWS_ON_LOAD = 2;
-const SUPPLY_COLOR = "#2563eb";
-const DEMAND_COLOR = "#f97316";
+const ENTRY_ROWS_ON_LOAD = 2;
+const SERIES = {
+  marketSupply: { label: "Market Supply", color: "#2563eb", unit: "listing" },
+  ourDemand: { label: "Our Demand", color: "#f97316", unit: "unit" },
+  ourSupply: { label: "Our Supply", color: "#16a34a", unit: "unit" },
+};
+const ENTERED_SERIES = ["ourDemand", "ourSupply"];
+const COMPARISONS = [
+  { id: "our-demand-vs-our-supply", series: ["ourDemand", "ourSupply"] },
+  { id: "our-supply-vs-market-supply", series: ["ourSupply", "marketSupply"] },
+];
 
 // ---- State ----
 let parsedRows = [];
 let parsedColumns = [];
 let bands = DEFAULT_BANDS.map((band) => ({ ...band }));
-let demand = buildEmptyDemand();
+let entries = buildEmptyEntries();
 let latestResult = null;
 const charts = new Map();
 
@@ -27,8 +35,11 @@ const fileStatus = document.getElementById("fileStatus");
 const previewBlock = document.getElementById("previewBlock");
 const previewTable = document.getElementById("previewTable");
 const previewHint = document.getElementById("previewHint");
-const demandSection = document.getElementById("demandSection");
-const demandGroups = document.getElementById("demandGroups");
+const entrySections = [document.getElementById("ourDemandSection"), document.getElementById("ourSupplySection")];
+const entryGroups = {
+  ourDemand: document.getElementById("ourDemandGroups"),
+  ourSupply: document.getElementById("ourSupplyGroups"),
+};
 const bandsSection = document.getElementById("bandsSection");
 const bandList = document.getElementById("bandList");
 const bandError = document.getElementById("bandError");
@@ -41,7 +52,7 @@ const resultsSection = document.getElementById("resultsSection");
 const chartCards = document.getElementById("chartCards");
 const summary = document.getElementById("summary");
 
-// ---- Step 1: supply upload ----
+// ---- Step 1: market supply upload ----
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -92,7 +103,7 @@ function loadParsedData(rows, columns) {
   parsedColumns = columns;
   setStatus(fileStatus, `Loaded ${rows.length} row(s), ${columns.length} column(s).`, "success");
   renderPreview();
-  demandSection.hidden = false;
+  entrySections.forEach((section) => (section.hidden = false));
   bandsSection.hidden = false;
   analyzeSection.hidden = false;
 }
@@ -102,7 +113,7 @@ function resetAfterNewFile() {
   parsedColumns = [];
   latestResult = null;
   previewBlock.hidden = true;
-  demandSection.hidden = true;
+  entrySections.forEach((section) => (section.hidden = true));
   bandsSection.hidden = true;
   analyzeSection.hidden = true;
   resultsSection.hidden = true;
@@ -125,22 +136,26 @@ function renderPreview() {
   previewBlock.hidden = false;
 }
 
-// ---- Step 2: demand entry ----
-function buildEmptyDemand() {
-  const entries = {};
-  for (const bedrooms of BEDROOM_TYPES) {
-    entries[bedrooms] = Array.from({ length: DEMAND_ROWS_ON_LOAD }, () => ({ price: "", quantity: "" }));
+// ---- Steps 2 & 3: our demand and our supply entry ----
+function buildEmptyEntries() {
+  const result = {};
+  for (const seriesKey of ENTERED_SERIES) {
+    result[seriesKey] = {};
+    for (const bedrooms of BEDROOM_TYPES) {
+      result[seriesKey][bedrooms] = Array.from({ length: ENTRY_ROWS_ON_LOAD }, () => ({ price: "", quantity: "" }));
+    }
   }
-  return entries;
+  return result;
 }
 
-function renderDemand() {
-  demandGroups.innerHTML = BEDROOM_TYPES.map(
+function renderEntries(seriesKey) {
+  const rowsByBedrooms = entries[seriesKey];
+  entryGroups[seriesKey].innerHTML = BEDROOM_TYPES.map(
     (bedrooms) => `
       <div class="demand-group">
         <h3>${bedrooms} bedroom</h3>
         <div class="demand-rows">
-          ${demand[bedrooms]
+          ${rowsByBedrooms[bedrooms]
             .map(
               (row, index) => `
               <div class="demand-row">
@@ -151,7 +166,7 @@ function renderDemand() {
                 <input type="number" class="demand-input" data-bedrooms="${bedrooms}" data-index="${index}"
                   data-field="quantity" value="${escapeHtml(row.quantity)}" placeholder="Units" min="0" step="1" />
                 <button class="secondary remove-demand" data-bedrooms="${bedrooms}" data-index="${index}"
-                  ${demand[bedrooms].length <= 1 ? "disabled" : ""}>Remove</button>
+                  ${rowsByBedrooms[bedrooms].length <= 1 ? "disabled" : ""}>Remove</button>
               </div>`
             )
             .join("")}
@@ -161,29 +176,31 @@ function renderDemand() {
   ).join("");
 }
 
-// Inputs update state without re-rendering, so typing never loses focus.
-demandGroups.addEventListener("change", (event) => {
-  const input = event.target.closest(".demand-input");
-  if (!input) return;
-  demand[input.dataset.bedrooms][Number(input.dataset.index)][input.dataset.field] = input.value;
-  reanalyzeIfShowingResults();
-});
-
-demandGroups.addEventListener("click", (event) => {
-  const addButton = event.target.closest(".add-demand");
-  if (addButton) {
-    demand[addButton.dataset.bedrooms].push({ price: "", quantity: "" });
-    renderDemand();
-    return;
-  }
-
-  const removeButton = event.target.closest(".remove-demand");
-  if (removeButton) {
-    demand[removeButton.dataset.bedrooms].splice(Number(removeButton.dataset.index), 1);
-    renderDemand();
+for (const [seriesKey, container] of Object.entries(entryGroups)) {
+  // Inputs update state without re-rendering, so typing never loses focus.
+  container.addEventListener("change", (event) => {
+    const input = event.target.closest(".demand-input");
+    if (!input) return;
+    entries[seriesKey][input.dataset.bedrooms][Number(input.dataset.index)][input.dataset.field] = input.value;
     reanalyzeIfShowingResults();
-  }
-});
+  });
+
+  container.addEventListener("click", (event) => {
+    const addButton = event.target.closest(".add-demand");
+    if (addButton) {
+      entries[seriesKey][addButton.dataset.bedrooms].push({ price: "", quantity: "" });
+      renderEntries(seriesKey);
+      return;
+    }
+
+    const removeButton = event.target.closest(".remove-demand");
+    if (removeButton) {
+      entries[seriesKey][removeButton.dataset.bedrooms].splice(Number(removeButton.dataset.index), 1);
+      renderEntries(seriesKey);
+      reanalyzeIfShowingResults();
+    }
+  });
+}
 
 // ---- Price bands ----
 function renderBands() {
@@ -242,12 +259,12 @@ function validateBands() {
   return null;
 }
 
-// ---- Step 3: analysis ----
-// For each bedroom type, work out what share of that type's supply (listings)
-// and demand (units) falls in each price band. Percentages are relative to the
-// bedroom type and to the series, so supply and demand each sum to 100% and can
-// be compared side by side.
-function analyzeData(rows, columns, activeBands, demandInput) {
+// ---- Step 5: analysis ----
+// For each bedroom type, work out what share of that type's market supply
+// (listings), our demand (units) and our supply (units) falls in each price
+// band. Percentages are relative to the bedroom type and to the series, so each
+// series sums to 100% and any two can be compared side by side.
+function analyzeData(rows, columns, activeBands, enteredInput) {
   const rentColumn = findColumn(columns, RENT_COLUMN_NAMES);
   const bedroomColumn = findColumn(columns, BEDROOM_COLUMN_NAMES);
 
@@ -257,8 +274,11 @@ function analyzeData(rows, columns, activeBands, demandInput) {
   const labels = activeBands.map(bandLabel).concat("Other");
   const groups = BEDROOM_TYPES.map((bedrooms) => ({
     bedrooms,
-    supply: emptySeries(labels.length),
-    demand: emptySeries(labels.length),
+    series: {
+      marketSupply: emptySeries(labels.length),
+      ourDemand: emptySeries(labels.length),
+      ourSupply: emptySeries(labels.length),
+    },
   }));
   const skipped = { bedrooms: 0, rent: 0, otherBedrooms: 0 };
 
@@ -281,21 +301,22 @@ function analyzeData(rows, columns, activeBands, demandInput) {
       continue;
     }
 
-    addToSeries(group.supply, bandIndexFor(rent, activeBands, labels.length), 1);
+    addToSeries(group.series.marketSupply, bandIndexFor(rent, activeBands, labels.length), 1);
   }
 
   for (const group of groups) {
-    for (const entry of demandInput[group.bedrooms]) {
-      const price = parseNumber(entry.price);
-      const quantity = parseNumber(entry.quantity);
-      if (!Number.isFinite(price) || !Number.isFinite(quantity)) continue;
-      addToSeries(group.demand, bandIndexFor(price, activeBands, labels.length), quantity);
+    for (const seriesKey of ENTERED_SERIES) {
+      for (const entry of enteredInput[seriesKey][group.bedrooms]) {
+        const price = parseNumber(entry.price);
+        const quantity = parseNumber(entry.quantity);
+        if (!Number.isFinite(price) || !Number.isFinite(quantity)) continue;
+        addToSeries(group.series[seriesKey], bandIndexFor(price, activeBands, labels.length), quantity);
+      }
     }
   }
 
   for (const group of groups) {
-    finaliseSeries(group.supply);
-    finaliseSeries(group.demand);
+    Object.values(group.series).forEach(finaliseSeries);
   }
 
   return { labels, groups, skipped, rentColumn, bedroomColumn };
@@ -323,7 +344,7 @@ analyzeBtn.addEventListener("click", runAnalysis);
 
 function runAnalysis() {
   if (parsedRows.length === 0) {
-    setStatus(analyzeStatus, "Please upload a supply file first.", "error");
+    setStatus(analyzeStatus, "Please upload a market supply file first.", "error");
     return;
   }
 
@@ -335,7 +356,7 @@ function runAnalysis() {
   }
 
   try {
-    latestResult = analyzeData(parsedRows, parsedColumns, bands, demand);
+    latestResult = analyzeData(parsedRows, parsedColumns, bands, entries);
     setStatus(analyzeStatus, "Analysis complete.", "success");
     renderSummary(latestResult);
     renderCharts(latestResult);
@@ -352,20 +373,20 @@ function reanalyzeIfShowingResults() {
 }
 
 function renderSummary(result) {
-  const supplyTotal = result.groups.reduce((sum, group) => sum + group.supply.total, 0);
-  const demandTotal = result.groups.reduce((sum, group) => sum + group.demand.total, 0);
+  const totalOf = (seriesKey) => result.groups.reduce((sum, group) => sum + group.series[seriesKey].total, 0);
   const notes = [];
   if (result.skipped.otherBedrooms > 0) notes.push(`${result.skipped.otherBedrooms} row(s) outside 1–3 bedrooms`);
   if (result.skipped.bedrooms > 0) notes.push(`${result.skipped.bedrooms} row(s) with unreadable bedrooms`);
   if (result.skipped.rent > 0) notes.push(`${result.skipped.rent} row(s) with unreadable rent`);
 
   summary.textContent =
-    `Supply: ${supplyTotal} listing(s) from "${result.rentColumn}" and "${result.bedroomColumn}". ` +
-    `Demand: ${demandTotal} unit(s) entered.` +
-    (notes.length > 0 ? ` Excluded from supply: ${notes.join(", ")}.` : "");
+    `Market Supply: ${totalOf("marketSupply")} listing(s) from "${result.rentColumn}" and "${result.bedroomColumn}". ` +
+    `Our Demand: ${totalOf("ourDemand")} unit(s) entered. ` +
+    `Our Supply: ${totalOf("ourSupply")} unit(s) entered.` +
+    (notes.length > 0 ? ` Excluded from market supply: ${notes.join(", ")}.` : "");
 }
 
-// ---- Step 4: charts ----
+// ---- Step 6: charts ----
 const whiteBackground = {
   id: "whiteBackground",
   beforeDraw(chart) {
@@ -406,42 +427,64 @@ Chart.register(whiteBackground, barValueLabels);
 function renderCharts(result) {
   destroyCharts();
   chartCards.innerHTML = result.groups
-    .map((group) => {
-      const hasData = group.supply.total > 0 || group.demand.total > 0;
-      return `
+    .map(
+      (group) => `
       <div class="card chart-card">
-        <div class="chart-head">
-          <h3>${group.bedrooms} bedroom</h3>
-          <button class="download-btn" data-bedrooms="${group.bedrooms}" ${hasData ? "" : "disabled"}>Download PNG</button>
-        </div>
-        ${
-          hasData
-            ? `<div class="chart-wrap"><canvas id="chart-${group.bedrooms}"></canvas></div>`
-            : `<p class="empty-msg">No ${group.bedrooms} bedroom supply listings or demand entered.</p>`
-        }
-      </div>`;
-    })
+        <h3>${group.bedrooms} bedroom</h3>
+        ${COMPARISONS.map((comparison) => {
+          const key = chartKey(group.bedrooms, comparison);
+          const title = comparisonTitle(comparison);
+          return `
+          <div class="chart-block">
+            <div class="chart-head">
+              <h4>${title}</h4>
+              <button class="download-btn" data-key="${key}" ${comparisonHasData(group, comparison) ? "" : "disabled"}>Download PNG</button>
+            </div>
+            ${
+              comparisonHasData(group, comparison)
+                ? `<div class="chart-wrap"><canvas id="chart-${key}"></canvas></div>`
+                : `<p class="empty-msg">No ${group.bedrooms} bedroom ${comparison.series.map((k) => SERIES[k].label).join(" or ")} data.</p>`
+            }
+          </div>`;
+        }).join("")}
+      </div>`
+    )
     .join("");
 
   for (const group of result.groups) {
-    if (group.supply.total === 0 && group.demand.total === 0) continue;
-    const canvas = document.getElementById(`chart-${group.bedrooms}`);
-    charts.set(group.bedrooms, new Chart(canvas, buildChartConfig(result.labels, group)));
+    for (const comparison of COMPARISONS) {
+      if (!comparisonHasData(group, comparison)) continue;
+      const key = chartKey(group.bedrooms, comparison);
+      const canvas = document.getElementById(`chart-${key}`);
+      charts.set(key, new Chart(canvas, buildChartConfig(result.labels, group, comparison)));
+    }
   }
 }
 
-function buildChartConfig(labels, group) {
-  const datasets = [];
-  if (group.supply.total > 0) {
-    datasets.push({ label: "Supply", data: group.supply.percentages, backgroundColor: SUPPLY_COLOR });
-  }
-  if (group.demand.total > 0) {
-    datasets.push({ label: "Demand", data: group.demand.percentages, backgroundColor: DEMAND_COLOR });
-  }
+function chartKey(bedrooms, comparison) {
+  return `${bedrooms}-bedroom-${comparison.id}`;
+}
 
-  const titleParts = [];
-  if (group.supply.total > 0) titleParts.push(`supply ${group.supply.total} listing(s)`);
-  if (group.demand.total > 0) titleParts.push(`demand ${group.demand.total} unit(s)`);
+function comparisonTitle(comparison) {
+  return comparison.series.map((seriesKey) => SERIES[seriesKey].label).join(" vs. ");
+}
+
+function comparisonHasData(group, comparison) {
+  return comparison.series.some((seriesKey) => group.series[seriesKey].total > 0);
+}
+
+function buildChartConfig(labels, group, comparison) {
+  const shown = comparison.series.filter((seriesKey) => group.series[seriesKey].total > 0);
+  const datasets = shown.map((seriesKey) => ({
+    label: SERIES[seriesKey].label,
+    seriesKey,
+    data: group.series[seriesKey].percentages,
+    backgroundColor: SERIES[seriesKey].color,
+  }));
+  const totals = shown.map((seriesKey) => {
+    const { label, unit } = SERIES[seriesKey];
+    return `${label.toLowerCase()} ${group.series[seriesKey].total} ${unit}(s)`;
+  });
 
   return {
     type: "bar",
@@ -452,7 +495,7 @@ function buildChartConfig(labels, group) {
       plugins: {
         title: {
           display: true,
-          text: `${group.bedrooms} bedroom — ${titleParts.join(", ")}`,
+          text: [`${group.bedrooms} bedroom — ${comparisonTitle(comparison)}`, totals.join(", ")],
           font: { size: 15 },
           color: "#1a1a1a",
         },
@@ -460,9 +503,9 @@ function buildChartConfig(labels, group) {
         tooltip: {
           callbacks: {
             label(context) {
-              const series = context.dataset.label === "Supply" ? group.supply : group.demand;
-              const raw = series.counts[context.dataIndex];
-              const unit = context.dataset.label === "Supply" ? "listing" : "unit";
+              const seriesKey = context.dataset.seriesKey;
+              const raw = group.series[seriesKey].counts[context.dataIndex];
+              const unit = SERIES[seriesKey].unit;
               return `${context.dataset.label}: ${formatPercent(context.parsed.y)} (${raw} ${unit}${raw === 1 ? "" : "s"})`;
             },
           },
@@ -485,12 +528,12 @@ chartCards.addEventListener("click", (event) => {
   const button = event.target.closest(".download-btn");
   if (!button) return;
 
-  const chart = charts.get(Number(button.dataset.bedrooms));
+  const chart = charts.get(button.dataset.key);
   if (!chart) return;
 
   const link = document.createElement("a");
   link.href = chart.toBase64Image("image/png", 1);
-  link.download = `${button.dataset.bedrooms}-bedroom-supply-vs-demand.png`;
+  link.download = `${button.dataset.key}.png`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -546,4 +589,4 @@ function setStatus(element, message, kind) {
 }
 
 renderBands();
-renderDemand();
+ENTERED_SERIES.forEach(renderEntries);
